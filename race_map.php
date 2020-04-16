@@ -70,7 +70,7 @@ function GetIMGSize()
 // Try connection
 
 $user="samp";
-$password="visuallizeit420&&/";
+$password="password";
 $database="samp";
 $verb = mysql_connect('127.0.0.1',$user,$password);
 @mysql_select_db($database) or die("Unable to select database");
