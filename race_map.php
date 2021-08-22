@@ -62,59 +62,88 @@ function GetIMGSize()
 		}
 	}
 	
-	return 500;
+	return 1250;
 }
 
 // -----------------------------------------------------------------------------
 
 // Try connection
 
-$user="samp";
-$password="password";
-$database="samp";
-$verb = mysql_connect('127.0.0.1',$user,$password);
-@mysql_select_db($database) or die("Unable to select database");
+$mysqli = new mysqli("localhost", "nrace_user", "FEs3xDWZUWGogUWh", "nrace");
+
+if ($mysqli -> connect_errno)
+{
+  echo "Failed to connect to MySQL: " . $mysqli -> connect_error;
+  exit();
+}
 
 if(isset($_GET['race']))
 {
 	$race = $_GET['race'];
-	
-	$result = mysql_query("SELECT ID,X,Y FROM race_checkpoints WHERE RaceID=".$race." ORDER BY ID ASC;");
+	$draw_info = isset($_GET['drawinfo']);
+
+	// Get Race Info
+
+	$result = $mysqli->query("SELECT Name, Author, Type, GameVModel FROM nr_race_meta WHERE ID = ".$race.";");
+
+	if($result->num_rows != 1)
+	{
+		echo "Invalid Race ID";
+		exit();
+	}
+
+	$race_info = mysqli_fetch_object($result);
+
+	// Get Race Type
+
+	$result = $mysqli->query("SELECT Name FROM nr_race_types WHERE ID = ".$race_info->Type.";");
+
+	if($result->num_rows != 1)
+	{
+		echo "Invalid Race Type";
+		exit();
+	}
+
+	$race_type = mysqli_fetch_object($result);
+
+	// Get Checkpoints
+
+	$result = $mysqli->query("SELECT ID, PosX, PosY FROM nr_race_checkpoints WHERE RaceID = ".$race." ORDER BY ID ASC;");
 	
 	$img_size = GetIMGSize();
 	
 	$array = NULL;
 	$num_cps = 0;
+
+	// Create canvas by JPG
+
+	$im = imagecreatefromjpeg("race_map/gtasa_map_".$img_size.".jpg");
+
+	// Draw CPs
 	
-	if(mysql_num_rows($result) >= 3)
+	if($result->num_rows >= 2)
 	{
 		// Copy results to array, we need to access 2 rows at the same time.
 	
-		while($tmp_obj = mysql_fetch_object($result))
+		while($tmp_obj = mysqli_fetch_object($result))
 		{
-			if($tmp_obj->ID != 1)
-			{
-				$array[$num_cps] = $tmp_obj;
+			$array[$num_cps] = $tmp_obj;
 
-				$num_cps ++;
-			}
+			$num_cps ++;
 		}
-		
-		// Loop and draw
 
 		if($array != NULL && $num_cps >= 2)
-		{
-		    // Create canvas by BMP
-
-			$im = imagecreatefromjpeg("race_map/gtasa_map_".$img_size.".jpg");
-			
+		{			
 			// Draw lines
 			
-			$array[1] = $array[0]; // Slot 1 is the Spawn Pos, we don't need it!
-
-			for($i = 2; $i < $num_cps; $i ++)
+			for($i = 1; $i < $num_cps; $i ++)
 			{
-   				DrawLineAtGTAPos($im, $array[$i - 1]->X, $array[$i - 1]->Y, $array[$i]->X, $array[$i]->Y);
+   				DrawLineAtGTAPos($im, $array[$i - 1]->PosX, $array[$i - 1]->PosY, $array[$i]->PosX, $array[$i]->PosY);
+			}
+
+			if($race_info->Type == 0)
+			{
+				DrawLineAtGTAPos($im, $array[0]->PosX, $array[0]->PosY, $array[$num_cps - 1]->PosX, $array[$num_cps - 1]->PosY);
 			}
 			
 			// Draw CPs
@@ -139,7 +168,7 @@ if(isset($_GET['race']))
 
                 for($i = 2; $i < $num_cps - 1; $i ++)
 				{
-			    	GetIMGPosFromGTAPos($array[$i]->X, $array[$i]->Y, $cp_x, $cp_y);
+			    	GetIMGPosFromGTAPos($array[$i]->PosX, $array[$i]->PosY, $cp_x, $cp_y);
 
 			    	imagecopymerge($im, $im_cp, $cp_x - $ICON_SIZE/2, $cp_y - $ICON_SIZE/2, 0, 0, $ICON_SIZE, $ICON_SIZE, 100);
 				}
@@ -167,14 +196,14 @@ if(isset($_GET['race']))
 			    $start_x = 0;
 			    $start_y = 0;
 			    
-			    GetIMGPosFromGTAPos($array[1]->X, $array[1]->Y, $start_x, $start_y);
+			    GetIMGPosFromGTAPos($array[0]->PosX, $array[0]->PosY, $start_x, $start_y);
 			    
 			    imagecopymerge($im, $im_start, $start_x - $ICON_SIZE/2, $start_y - $ICON_SIZE/2, 0, 0, $ICON_SIZE, $ICON_SIZE, 100);
 			    
 			    imagedestroy($im_start);
 			}
 
-            if($im_end = imagecreatefrompng('race_map/gtasa_icon_endbl.png'))
+            if($race_info->Type != 0 && $im_end = imagecreatefrompng('race_map/gtasa_icon_endbl.png'))
 			{
 				$ICON_SIZE = 60;
 
@@ -192,22 +221,50 @@ if(isset($_GET['race']))
 			    $end_x = 0;
 			    $end_y = 0;
 
-			    GetIMGPosFromGTAPos($array[$num_cps - 1]->X, $array[$num_cps - 1]->Y, $end_x, $end_y);
+			    GetIMGPosFromGTAPos($array[$num_cps - 1]->PosX, $array[$num_cps - 1]->PosY, $end_x, $end_y);
 
 			    imagecopymerge($im, $im_end, $end_x - $ICON_SIZE/2, $end_y - $ICON_SIZE/2, 0, 0, $ICON_SIZE, $ICON_SIZE, 100);
 
 			    imagedestroy($im_end);
 			}
-			
-			// Set the content type header and output
-
-			header("Content-type: image/jpeg");
-			imagejpeg($im);
-
-			// Free up memory
-			
-			imagedestroy($im);
 		}
+
+		// Draw Name and Type
+
+		if($draw_info)
+		{
+			$size = $img_size / 80;
+
+			$pos_x = $img_size / 100;
+			$pos_y = $img_size / 100 + $size;
+
+			$text_col_fg = imagecolorallocate($im, 255, 255, 255);
+			$text_col_bg = imagecolorallocate($im, 0, 0, 0);
+
+			$text = "'".$race_info->Name."' (".$race_type->Name." Race)";
+			$font = "font/Amiga Forever.ttf";
+
+			$outline = $img_size / 500;
+
+			for($x = -$outline; $x <= $outline; $x++)
+			{
+				for($y = -$outline; $y <= $outline; $y++)
+				{
+					imagettftext($im, $size, 0, $pos_x + $x, $pos_y + $y, $text_col_bg, $font, $text);
+				}
+			}
+			
+			imagettftext($im, $size, 0, $pos_x, $pos_y, $text_col_fg, $font, $text);
+		}
+
+		// Set the content type header and output
+
+		header("Content-type: image/jpeg");
+		imagejpeg($im);
+
+		// Free up memory
+		
+		imagedestroy($im);
 	}
 }
 
