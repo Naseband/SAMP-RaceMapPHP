@@ -5,8 +5,8 @@ function GetIMGPosFromGTAPos($x, $y, &$gtax, &$gtay)
 	$GTA_X = 6000.0;
 	$GTA_Y = 6000.0;
 
-    $IMG_X = GetIMGSize();
-    $IMG_Y = GetIMGSize();
+	$IMG_X = GetIMGSize();
+	$IMG_Y = GetIMGSize();
 
 	// Translate X & Y
 	$x = $x + ($GTA_X / 2.0);
@@ -26,7 +26,7 @@ function DrawLineAtGTAPos($im, $g_x1, $g_y1, $g_x2, $g_y2)
 {
 	$Line_Thickness = 6;
 
-    // Alloc color for CPs
+	// Alloc color for CPs
 	$color = imagecolorallocate($im, 155, 20, 60);
 
 	// Draw Line
@@ -39,7 +39,7 @@ function DrawLineAtGTAPos($im, $g_x1, $g_y1, $g_x2, $g_y2)
 	GetIMGPosFromGTAPos($g_x1, $g_y1, $i_x1, $i_y1);
 	GetIMGPosFromGTAPos($g_x2, $g_y2, $i_x2, $i_y2);
 
-    imagesetthickness($im, $Line_Thickness);
+	imagesetthickness($im, $Line_Thickness);
   	imageline($im, $i_x1, $i_y1, $i_x2, $i_y2, $color);
 
 	return 1;
@@ -47,17 +47,17 @@ function DrawLineAtGTAPos($im, $g_x1, $g_y1, $g_x2, $g_y2)
 
 function GetIMGSize()
 {
-    if(isset($_GET['imgsize']))
+	if(isset($_GET['imgsize']))
 	{
 		$img_size = $_GET['imgsize'];
 
 		switch($img_size)
 		{
-		    case 500:
+			case 500:
 			case 1000:
 			case 1250:
 			case 2000:
-		        return $img_size;
+				return $img_size;
 				break;
 		}
 	}
@@ -148,32 +148,32 @@ if(isset($_GET['race']))
 			
 			// Draw CPs
 			
-            if($im_cp = imagecreatefrompng('race_map/gtasa_icon_cpbl.png'))
+			if($im_cp = imagecreatefrompng('race_map/gtasa_icon_cpbl.png'))
 			{
 				$ICON_SIZE = 14;
 
-			    if($im_cp_n = imagescale($im_cp, $ICON_SIZE, $ICON_SIZE, IMG_NEAREST_NEIGHBOUR))
-			    {
-			        imagedestroy($im_cp);
-
-			        $im_cp = $im_cp_n;
-			    }
-
-			    $color = imagecolorallocate($im_cp, 0, 0, 0);
-
-			    imagecolortransparent($im_cp, $color);
-
-			    $cp_x = 0;
-			    $cp_y = 0;
-
-                for($i = 2; $i < $num_cps - 1; $i ++)
+				if($im_cp_n = imagescale($im_cp, $ICON_SIZE, $ICON_SIZE, IMG_NEAREST_NEIGHBOUR))
 				{
-			    	GetIMGPosFromGTAPos($array[$i]->PosX, $array[$i]->PosY, $cp_x, $cp_y);
+					imagedestroy($im_cp);
 
-			    	imagecopymerge($im, $im_cp, $cp_x - $ICON_SIZE/2, $cp_y - $ICON_SIZE/2, 0, 0, $ICON_SIZE, $ICON_SIZE, 100);
+					$im_cp = $im_cp_n;
 				}
 
-			    imagedestroy($im_cp);
+				$color = imagecolorallocate($im_cp, 0, 0, 0);
+
+				imagecolortransparent($im_cp, $color);
+
+				$cp_x = 0;
+				$cp_y = 0;
+
+				for($i = 2; $i < $num_cps - 1; $i ++)
+				{
+					GetIMGPosFromGTAPos($array[$i]->PosX, $array[$i]->PosY, $cp_x, $cp_y);
+
+					imagecopymerge($im, $im_cp, $cp_x - $ICON_SIZE/2, $cp_y - $ICON_SIZE/2, 0, 0, $ICON_SIZE, $ICON_SIZE, 100);
+				}
+
+				imagedestroy($im_cp);
 			}
 			
 			// Draw Start & End
@@ -182,50 +182,50 @@ if(isset($_GET['race']))
 			{
 				$ICON_SIZE = 60;
 				
-			    if($im_start_n = imagescale($im_start, $ICON_SIZE, $ICON_SIZE, IMG_NEAREST_NEIGHBOUR))
-			    {
-			        imagedestroy($im_start);
-			        
-			        $im_start = $im_start_n;
-			    }
-			    
-			    $color = imagecolorallocate($im_start, 0, 0, 0);
-			    
-			    imagecolortransparent($im_start, $color);
-			    
-			    $start_x = 0;
-			    $start_y = 0;
-			    
-			    GetIMGPosFromGTAPos($array[0]->PosX, $array[0]->PosY, $start_x, $start_y);
-			    
-			    imagecopymerge($im, $im_start, $start_x - $ICON_SIZE/2, $start_y - $ICON_SIZE/2, 0, 0, $ICON_SIZE, $ICON_SIZE, 100);
-			    
-			    imagedestroy($im_start);
+				if($im_start_n = imagescale($im_start, $ICON_SIZE, $ICON_SIZE, IMG_NEAREST_NEIGHBOUR))
+				{
+					imagedestroy($im_start);
+					
+					$im_start = $im_start_n;
+				}
+				
+				$color = imagecolorallocate($im_start, 0, 0, 0);
+				
+				imagecolortransparent($im_start, $color);
+				
+				$start_x = 0;
+				$start_y = 0;
+				
+				GetIMGPosFromGTAPos($array[0]->PosX, $array[0]->PosY, $start_x, $start_y);
+				
+				imagecopymerge($im, $im_start, $start_x - $ICON_SIZE/2, $start_y - $ICON_SIZE/2, 0, 0, $ICON_SIZE, $ICON_SIZE, 100);
+				
+				imagedestroy($im_start);
 			}
 
-            if($race_info->Type != 0 && $im_end = imagecreatefrompng('race_map/gtasa_icon_endbl.png'))
+			if($race_info->Type != 0 && $im_end = imagecreatefrompng('race_map/gtasa_icon_endbl.png'))
 			{
 				$ICON_SIZE = 60;
 
-			    if($im_end_n = imagescale($im_end, $ICON_SIZE, $ICON_SIZE, IMG_NEAREST_NEIGHBOUR))
-			    {
-			        imagedestroy($im_end);
+				if($im_end_n = imagescale($im_end, $ICON_SIZE, $ICON_SIZE, IMG_NEAREST_NEIGHBOUR))
+				{
+					imagedestroy($im_end);
 
-			        $im_end = $im_end_n;
-			    }
+					$im_end = $im_end_n;
+				}
 
-			    $color = imagecolorallocate($im_end, 0, 0, 0);
+				$color = imagecolorallocate($im_end, 0, 0, 0);
 
-			    imagecolortransparent($im_end, $color);
+				imagecolortransparent($im_end, $color);
 
-			    $end_x = 0;
-			    $end_y = 0;
+				$end_x = 0;
+				$end_y = 0;
 
-			    GetIMGPosFromGTAPos($array[$num_cps - 1]->PosX, $array[$num_cps - 1]->PosY, $end_x, $end_y);
+				GetIMGPosFromGTAPos($array[$num_cps - 1]->PosX, $array[$num_cps - 1]->PosY, $end_x, $end_y);
 
-			    imagecopymerge($im, $im_end, $end_x - $ICON_SIZE/2, $end_y - $ICON_SIZE/2, 0, 0, $ICON_SIZE, $ICON_SIZE, 100);
+				imagecopymerge($im, $im_end, $end_x - $ICON_SIZE/2, $end_y - $ICON_SIZE/2, 0, 0, $ICON_SIZE, $ICON_SIZE, 100);
 
-			    imagedestroy($im_end);
+				imagedestroy($im_end);
 			}
 		}
 
